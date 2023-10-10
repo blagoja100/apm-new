@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { IProduct } from './product';
+import { IProduct } from '../product';
 import { Title } from '@angular/platform-browser';
-import { ProductService } from './product.service';
+import { ProductService } from '../product.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'pm-product-list',
@@ -9,6 +10,7 @@ import { ProductService } from './product.service';
   styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent implements OnInit {
+   
     constructor(private productService: ProductService) {
     }
 
@@ -17,8 +19,10 @@ export class ProductListComponent implements OnInit {
     imageMargin: number = 2;
     showImage: boolean = false;
     filteredProducts: IProduct[] = [];
-    products: IProduct[] = []
-    
+    products: IProduct[] = [];
+    errorMessage: string = '';
+    sub!: Subscription;
+
     private _listFilter = '';
     get listFilter(): string {
       return this._listFilter;
@@ -30,8 +34,17 @@ export class ProductListComponent implements OnInit {
     }
 
     ngOnInit(): void {
-      this.products = this.productService.getProducts();
-      this.filteredProducts = this.products;
+      this.sub = this.productService.getProducts().subscribe({
+        next: products => {
+          this.products = products;
+          this.filteredProducts = this.products;
+        },
+        error: error => this.errorMessage = error
+      })   
+    }
+
+    ngOnDestroy(): void {
+      this.sub.unsubscribe();
     }
 
     toggleImage(): void {
